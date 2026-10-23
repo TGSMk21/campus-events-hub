@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Organizer venue booking request form for the Campus Event and Activities Hub, Mulungushi University.">
+  <title>Venue Booking Request | Campus Event and Activities Hub</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to main content</a>
+
+  <header class="site-header">
+    <p class="brand">Campus Event and Activities Hub</p>
+    <nav aria-label="Primary">
+      <ul>
+        <li><a href="#events">Events</a></li>
+        <li><a href="#groups">Student groups</a></li>
+        <li><a href="#booking" aria-current="page">Request a venue</a></li>
+        <li><a href="#help">Help</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main id="main">
+    <section id="booking" aria-labelledby="booking-title">
+      <h1 id="booking-title">Venue booking request</h1>
+      <p class="lead">Organizers use this form to propose an event date and venue. An administrator reviews every request before the event is published.</p>
+      <p class="note">Fields marked <span aria-hidden="true">*</span><span class="visually-hidden">with an asterisk</span> are required.</p>
+
+      <div id="status" class="summary" role="status" aria-live="polite" tabindex="-1"></div>
+
+      <form id="booking-form" novalidate>
+        <fieldset>
+          <legend>Organizer details</legend>
+
+          <div class="field">
+            <label for="full-name">Full name <span aria-hidden="true">*</span></label>
+            <input type="text" id="full-name" name="fullName" autocomplete="name" required minlength="3" maxlength="60" aria-describedby="full-name-hint full-name-error" aria-invalid="false">
+            <p id="full-name-hint" class="hint">As it appears on your student or staff ID.</p>
+            <p id="full-name-error" class="error" hidden></p>
+          </div>
+
+          <div class="field">
+            <label for="email">Email address <span aria-hidden="true">*</span></label>
+            <input type="email" id="email" name="email" autocomplete="email" required aria-describedby="email-hint email-error" aria-invalid="false">
+            <p id="email-hint" class="hint">Your ticket and approval notices are sent here.</p>
+            <p id="email-error" class="error" hidden></p>
+          </div>
+
+          <div class="field">
+            <label for="phone">WhatsApp phone number <span aria-hidden="true">*</span></label>
+            <input type="tel" id="phone" name="phone" autocomplete="tel" required inputmode="tel" aria-describedby="phone-hint phone-error" aria-invalid="false">
+            <p id="phone-hint" class="hint">Zambian format, for example +260971234567 or 0971234567.</p>
+            <p id="phone-error" class="error" hidden></p>
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend>Event details</legend>
+
+          <div class="field">
+            <label for="event-title">Event title <span aria-hidden="true">*</span></label>
+            <input type="text" id="event-title" name="eventTitle" required minlength="5" maxlength="80" aria-describedby="event-title-hint event-title-error" aria-invalid="false">
+            <p id="event-title-hint" class="hint">Between 5 and 80 characters.</p>
+            <p id="event-title-error" class="error" hidden></p>
+          </div>
+
+          <div class="field">
+            <label for="category">Event category <span aria-hidden="true">*</span></label>
+            <select id="category" name="category" required aria-describedby="category-error" aria-invalid="false">
+              <option value="">Choose a category</option>
+              <option value="academic">Academic</option>
+              <option value="club">Club or society</option>
+              <option value="sports">Sports</option>
+              <option value="cultural">Cultural</option>
+              <option value="career">Career and networking</option>
+            </select>
+            <p id="category-error" class="error" hidden></p>
+          </div>
+
+          <div class="field">
+            <label for="venue">Preferred venue <span aria-hidden="true">*</span></label>
+            <select id="venue" name="venue" required aria-describedby="venue-hint venue-error" aria-invalid="false">
+              <option value="">Choose a venue</option>
+              <option value="auditorium">Main Auditorium (capacity 400)</option>
+              <option value="lecture-hall">Lecture Hall A (capacity 150)</option>
+              <option value="sports-ground">Sports Ground (capacity 800)</option>
+              <option value="student-centre">Student Centre (capacity 120)</option>
+            </select>
+            <p id="venue-hint" class="hint">Availability is confirmed by an administrator.</p>
+            <p id="venue-error" class="error" hidden></p>
+          </div>
+
+          <div class="field-row">
+            <div class="field">
+              <label for="event-date">Event date <span aria-hidden="true">*</span></label>
+              <input type="date" id="event-date" name="eventDate" required aria-describedby="event-date-error" aria-invalid="false">
+              <p id="event-date-error" class="error" hidden></p>
+            </div>
+            <div class="field">
+              <label for="start-time">Start time <span aria-hidden="true">*</span></label>
+              <input type="time" id="start-time" name="startTime" required aria-describedby="start-time-error" aria-invalid="false">
+              <p id="start-time-error" class="error" hidden></p>
+            </div>
+            <div class="field">
+              <label for="end-time">End time <span aria-hidden="true">*</span></label>
+              <input type="time" id="end-time" name="endTime" required aria-describedby="end-time-error" aria-invalid="false">
+              <p id="end-time-error" class="error" hidden></p>
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="attendance">Expected attendance <span aria-hidden="true">*</span></label>
+            <input type="number" id="attendance" name="attendance" required min="1" max="800" inputmode="numeric" aria-describedby="attendance-hint attendance-error" aria-invalid="false">
+            <p id="attendance-hint" class="hint">Between 1 and 800 people.</p>
+            <p id="attendance-error" class="error" hidden></p>
+          </div>
+
+          <fieldset class="group" id="ticket-type" aria-describedby="ticket-type-error">
+            <legend>Ticketing <span aria-hidden="true">*</span></legend>
+            <div class="choice">
+              <input type="radio" id="ticket-free" name="ticketType" value="free" required>
+              <label for="ticket-free">Free event (registration only)</label>
+            </div>
+            <div class="choice">
+              <input type="radio" id="ticket-paid" name="ticketType" value="paid">
+              <label for="ticket-paid">Ticketed event (simulated checkout)</label>
+            </div>
+            <p id="ticket-type-error" class="error" hidden></p>
+          </fieldset>
+
+          <fieldset class="group">
+            <legend>Venue requirements</legend>
+            <div class="choice">
+              <input type="checkbox" id="req-projector" name="requirements" value="projector">
+              <label for="req-projector">Projector and screen</label>
+            </div>
+            <div class="choice">
+              <input type="checkbox" id="req-sound" name="requirements" value="sound">
+              <label for="req-sound">Sound system</label>
+            </div>
+            <div class="choice">
+              <input type="checkbox" id="req-seating" name="requirements" value="seating">
+              <label for="req-seating">Extra seating</label>
+            </div>
+          </fieldset>
+
+          <div class="field">
+            <label for="description">Event description <span aria-hidden="true">*</span></label>
+            <textarea id="description" name="description" rows="5" required minlength="20" maxlength="500" aria-describedby="description-hint description-count description-error" aria-invalid="false"></textarea>
+            <p id="description-hint" class="hint">Tell students what the event is about. Between 20 and 500 characters.</p>
+            <p id="description-count" class="hint">0 of 500 characters used</p>
+            <p id="description-error" class="error" hidden></p>
+          </div>
+
+          <div class="field">
+            <label for="approval-form">Supporting document (optional)</label>
+            <input type="file" id="approval-form" name="approvalForm" accept=".pdf,.doc,.docx" aria-describedby="approval-form-hint">
+            <p id="approval-form-hint" class="hint">PDF or Word file, for example a signed faculty approval letter.</p>
+          </div>
+        </fieldset>
+
+        <div class="field consent">
+          <div class="choice">
+            <input type="checkbox" id="terms" name="terms" required aria-describedby="terms-error" aria-invalid="false">
+            <label for="terms">I confirm the information is correct and I agree to the venue use rules. <span aria-hidden="true">*</span></label>
+          </div>
+          <p id="terms-error" class="error" hidden></p>
+        </div>
+
+        <div class="actions">
+          <button type="submit" class="btn btn-primary">Submit request</button>
+          <button type="reset" class="btn btn-secondary">Clear form</button>
+        </div>
+      </form>
+    </section>
+
+    <section id="help" aria-labelledby="help-title" class="help">
+      <h2 id="help-title">Need help?</h2>
+      <p>Contact the Student Affairs office on weekdays between 08:00 and 16:30, or read the <a href="#help">venue use guidelines</a>.</p>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <p>&copy; 2026 Mulungushi University, ICT461 Group 2. Prototype for coursework only.</p>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
