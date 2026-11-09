@@ -1,0 +1,189 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "ICT461 Group API",
+    "version": "1.0.0",
+    "description": "Contract-first API for Labs 4 and 5. Every /api/ response carries RateLimit-Limit, RateLimit-Remaining and RateLimit-Reset headers. All errors are RFC 7807 application/problem+json."
+  },
+  "servers": [{ "url": "https://localhost:8443" }],
+  "paths": {
+    "/api/v1/users": {
+      "post": {
+        "operationId": "createUser",
+        "summary": "Register a user",
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/UserCreate" } } } },
+        "responses": {
+          "201": {
+            "description": "User created",
+            "headers": {
+              "RateLimit-Limit": { "$ref": "#/components/headers/RateLimit-Limit" },
+              "RateLimit-Remaining": { "$ref": "#/components/headers/RateLimit-Remaining" },
+              "RateLimit-Reset": { "$ref": "#/components/headers/RateLimit-Reset" }
+            },
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/User" } } }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "422": { "$ref": "#/components/responses/Unprocessable" },
+          "429": { "$ref": "#/components/responses/TooManyRequests" },
+          "500": { "$ref": "#/components/responses/ServerError" }
+        }
+      }
+    },
+    "/api/v1/auth/login": {
+      "post": {
+        "operationId": "login",
+        "summary": "Start a session (sets the sid cookie)",
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/LoginRequest" } } } },
+        "responses": {
+          "200": {
+            "description": "Logged in",
+            "headers": { "Set-Cookie": { "description": "sid=<256-bit random token>; HttpOnly; Secure; SameSite=Strict; Max-Age=3600", "schema": { "type": "string" } } },
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/User" } } }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "422": { "$ref": "#/components/responses/Unprocessable" },
+          "429": { "$ref": "#/components/responses/TooManyRequests" },
+          "500": { "$ref": "#/components/responses/ServerError" }
+        }
+      }
+    },
+    "/api/v1/auth/logout": {
+      "post": {
+        "operationId": "logout",
+        "summary": "Revoke the server-side session and expire the cookie",
+        "security": [{ "cookieAuth": [] }],
+        "responses": {
+          "204": { "description": "Session revoked, cookie expired" },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "429": { "$ref": "#/components/responses/TooManyRequests" },
+          "500": { "$ref": "#/components/responses/ServerError" }
+        }
+      }
+    },
+    "/api/v1/events": {
+      "get": {
+        "operationId": "listEvents",
+        "summary": "List the caller's events",
+        "security": [{ "cookieAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "Events",
+            "headers": {
+              "RateLimit-Limit": { "$ref": "#/components/headers/RateLimit-Limit" },
+              "RateLimit-Remaining": { "$ref": "#/components/headers/RateLimit-Remaining" },
+              "RateLimit-Reset": { "$ref": "#/components/headers/RateLimit-Reset" }
+            },
+            "content": { "application/json": { "schema": { "type": "array", "items": { "$ref": "#/components/schemas/Event" } } } }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "429": { "$ref": "#/components/responses/TooManyRequests" },
+          "500": { "$ref": "#/components/responses/ServerError" }
+        }
+      },
+      "post": {
+        "operationId": "createEvent",
+        "summary": "Create an event",
+        "security": [{ "cookieAuth": [] }],
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/EventCreate" } } } },
+        "responses": {
+          "201": { "description": "Event created", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Event" } } } },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "422": { "$ref": "#/components/responses/Unprocessable" },
+          "429": { "$ref": "#/components/responses/TooManyRequests" },
+          "500": { "$ref": "#/components/responses/ServerError" }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": { "cookieAuth": { "type": "apiKey", "in": "cookie", "name": "sid" } },
+    "headers": {
+      "RateLimit-Limit": { "description": "Requests allowed per window", "schema": { "type": "integer" } },
+      "RateLimit-Remaining": { "description": "Requests left in the current window", "schema": { "type": "integer" } },
+      "RateLimit-Reset": { "description": "Seconds until the window resets", "schema": { "type": "integer" } },
+      "Retry-After": { "description": "Seconds to wait before retrying", "schema": { "type": "integer" } }
+    },
+    "schemas": {
+      "Problem": {
+        "type": "object",
+        "description": "RFC 7807 Problem Details, extended with an errors array",
+        "required": ["type", "title", "status"],
+        "properties": {
+          "type": { "type": "string", "format": "uri-reference", "default": "about:blank" },
+          "title": { "type": "string" },
+          "status": { "type": "integer", "minimum": 400, "maximum": 599 },
+          "detail": { "type": "string" },
+          "errors": {
+            "type": "array",
+            "items": { "type": "object", "required": ["field", "message"], "properties": { "field": { "type": "string" }, "message": { "type": "string" } } }
+          }
+        }
+      },
+      "UserCreate": {
+        "type": "object",
+        "required": ["username", "email", "password"],
+        "additionalProperties": false,
+        "properties": {
+          "username": { "type": "string", "minLength": 3, "maxLength": 20, "pattern": "^[a-zA-Z0-9_]+$" },
+          "email": { "type": "string", "format": "email", "maxLength": 254 },
+          "password": { "type": "string", "minLength": 8, "maxLength": 128 }
+        }
+      },
+      "LoginRequest": {
+        "type": "object",
+        "required": ["email", "password"],
+        "additionalProperties": false,
+        "properties": { "email": { "type": "string", "format": "email" }, "password": { "type": "string", "minLength": 1 } }
+      },
+      "User": {
+        "type": "object",
+        "required": ["id", "username", "email"],
+        "additionalProperties": false,
+        "properties": { "id": { "type": "integer", "minimum": 1 }, "username": { "type": "string" }, "email": { "type": "string", "format": "email" } }
+      },
+      "EventCreate": {
+        "type": "object",
+        "required": ["title", "venue", "date", "capacity"],
+        "additionalProperties": false,
+        "properties": {
+          "title": { "type": "string", "minLength": 3, "maxLength": 100 },
+          "venue": { "type": "string", "minLength": 1, "maxLength": 100 },
+          "date": { "type": "string", "format": "date" },
+          "capacity": { "type": "integer", "minimum": 1, "maximum": 10000 }
+        }
+      },
+      "Event": {
+        "type": "object",
+        "required": ["id", "title", "venue", "date", "capacity"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "integer", "minimum": 1 },
+          "title": { "type": "string" },
+          "venue": { "type": "string" },
+          "date": { "type": "string", "format": "date" },
+          "capacity": { "type": "integer" }
+        }
+      }
+    },
+    "responses": {
+      "BadRequest": { "description": "Malformed JSON or unexpected query parameters", "content": { "application/problem+json": { "schema": { "$ref": "#/components/schemas/Problem" } } } },
+      "Unauthorized": { "description": "Missing, invalid, expired or revoked session", "content": { "application/problem+json": { "schema": { "$ref": "#/components/schemas/Problem" } } } },
+      "Unprocessable": { "description": "Valid JSON that violates the schema (type, pattern, range, required, additionalProperties)", "content": { "application/problem+json": { "schema": { "$ref": "#/components/schemas/Problem" } } } },
+      "TooManyRequests": {
+        "description": "Rate limit exceeded",
+        "headers": {
+          "RateLimit-Limit": { "$ref": "#/components/headers/RateLimit-Limit" },
+          "RateLimit-Remaining": { "$ref": "#/components/headers/RateLimit-Remaining" },
+          "RateLimit-Reset": { "$ref": "#/components/headers/RateLimit-Reset" },
+          "Retry-After": { "$ref": "#/components/headers/Retry-After" }
+        },
+        "content": { "application/problem+json": { "schema": { "$ref": "#/components/schemas/Problem" } } }
+      },
+      "ServerError": { "description": "Unexpected server error", "content": { "application/problem+json": { "schema": { "$ref": "#/components/schemas/Problem" } } } }
+    }
+  }
+}
