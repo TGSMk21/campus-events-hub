@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% from "_macros.html" import category, seats, status %}
+{% block title %}{{ ev.title }}{% endblock %}
+{% block description %}{{ ev.description[:150] }}{% endblock %}
+{% block page %}event{% endblock %}
+{% block scripts %}
+<script nonce="{{ nonce }}" src="{{ static('js/live.js') }}" defer></script>
+<script nonce="{{ nonce }}" src="{{ static('js/event.js') }}" defer></script>
+{% endblock %}
+
+{% block content %}
+<p class="small"><a href="/">← All events</a></p>
+<div class="two-col">
+  <article aria-labelledby="ev-title">
+    <div class="actions mt0">{{ category(ev.category) }}{% if ev.status != 'published' %}{{ status(ev.status) }}{% endif %}</div>
+    <h1 id="ev-title">{{ ev.title }}</h1>
+    <p class="muted">Organised by {{ ev.organizer_name }}{% if ev.group %} for <a href="/groups/{{ ev.group.slug }}">{{ ev.group.name }}</a>{% endif %}</p>
+    <p class="pre-line">{{ ev.description }}</p>
+
+    {% if ev.status == 'published' %}
+    <section aria-labelledby="chat-title" class="stack mt2">
+      <h2 id="chat-title">Live event room</h2>
+      {% if user %}
+      <p class="muted small">Ask questions and get announcements from the organizer. Messages are visible to everyone in the room.</p>
+      <div id="chat" data-event-id="{{ ev.id }}">
+        <div class="chat-feed" id="chat-feed" role="log" aria-live="polite" aria-label="Chat messages"></div>
+        <form class="chat-form" id="chat-form">
+          <label for="chat-input" class="visually-hidden">Message</label>
+          <input id="chat-input" type="text" maxlength="300" autocomplete="off" placeholder="Type a message…" required>
+          <button class="btn btn-primary" type="submit">Send</button>
+        </form>
+        <p class="hint" id="chat-status">Connecting…</p>
+      </div>
+      {% else %}
+      <p class="panel"><a href="/login?next=/events/{{ ev.id }}">Sign in</a> to join the live room.</p>
+      {% endif %}
+    </section>
+    {% endif %}
+  </article>
+
+  <aside class="panel stack" aria-labelledby="tix-title">
+    <h2 id="tix-title" class="visually-hidden">Tickets and details</h2>
+    <dl class="facts">
+      <dt>When</dt><dd>{{ ev.starts_at|when('%A %d %B %Y') }}<br>{{ ev.starts_at|when('%H:%M') }} – {{ ev.ends_at|when('%H:%M') }}</dd>
+      <dt>Where</dt><dd><a href="/venues?venue={{ ev.venue.id }}">{{ ev.venue.name }}</a></dd>
+      <dt>Price</dt><dd class="price">{{ ev.price_ngwee|money }}</dd>
+      <dt>Seats</dt><dd>{{ seats(ev) }}</dd>
+    </dl>
+
+    <div id="ticket-status" class="summary" role="status" aria-live="polite" tabindex="-1"></div>
+
+    {% if ev.status == 'published' %}
+      {% if ticket %}
+        <div class="summary is-success"><h2>You're going</h2><p>Ticket code <span class="mono ticket-code">{{ ticket.code }}</span></p></div>
+        <a class="btn btn-secondary" href="/account#tickets">View my tickets</a>
+      {% elif started %}
+        <p class="muted">This event has started; tickets are closed.</p>
+      {% elif not user %}
+        <a class="btn btn-primary" href="/login?next=/events/{{ ev.id }}">Sign in to get a ticket</a>
+      {% else %}
+        <button class="btn btn-primary" type="button" id="get-ticket" data-event-id="{{ ev.id }}"
+                data-mode="{{ 'checkout' if ev.price_ngwee else 'register' }}" {% if ev.seats_left == 0 %}disabled{% endif %}>
+          {% if ev.seats_left == 0 %}Sold out{% elif ev.price_ngwee %}Buy ticket · {{ ev.price_ngwee|money }}{% else %}Register (free){% endif %}
+        </button>
+        <p class="hint">Your ticket is emailed to {{ user.email }}{% if user.whatsapp_opt_in %} and sent on WhatsApp{% endif %}.</p>
+      {% endif %}
+    {% endif %}
+
+    {% if can_manage %}
+    <div class="stack divider">
+      <p class="small"><strong>Organizer tools</strong> · status {{ status(ev.status) }}</p>
+      <a class="btn btn-secondary btn-sm" href="/organizer">Open dashboard</a>
+    </div>
+    {% endif %}
+  </aside>
+</div>
+{% endblock %}

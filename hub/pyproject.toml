@@ -1,0 +1,18 @@
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"
+filterwarnings = ["ignore::DeprecationWarning"]
+
+[tool.ruff]
+line-length = 130
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "B", "S"]
+ignore = ["S101", "S311", "S105", "S106", "S608", "B008", "E501"]
+# S608 (SQL string building) is ignored deliberately: dynamic SQL is assembled only from fixed
+# fragments and allow-listed column names; every user value is a bound parameter.
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["S"]
+"scripts/*" = ["S"]

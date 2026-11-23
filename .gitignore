@@ -2,3 +2,20 @@
 key.pem
 cert.pem
 __pycache__/
+*.pyc
+
+# secrets: never commit real environment files (Lab 6, Task 4)
+.env
+.env.*
+!.env.example
+**/certs/
+*.key
+
+# local runtime
+.venv/
+venv/
+hub/uploads/
+.pgdata/
+.pytest_cache/
+.ruff_cache/
+.DS_Store

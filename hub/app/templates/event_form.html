@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Edit event' if ev else 'New event' }}{% endblock %}
+{% block page %}event-form{% endblock %}
+{% block main_class %}narrow{% endblock %}
+{% block scripts %}
+<script nonce="{{ nonce }}" src="{{ static('js/forms.js') }}" defer></script>
+<script nonce="{{ nonce }}" src="{{ static('js/event_form.js') }}" defer></script>
+{% endblock %}
+
+{% block content %}
+<p class="small"><a href="/organizer">← Organizer dashboard</a></p>
+<h1>{{ 'Edit event' if ev else 'Create an event' }}</h1>
+<p class="lead">Events start as drafts. When you're ready, request the venue from your dashboard; an administrator reviews every request before the event is published.</p>
+<p class="muted">All fields are required unless marked optional.</p>
+
+<div id="status" class="summary" role="status" aria-live="polite" tabindex="-1"></div>
+
+<form id="event-form" novalidate data-event-id="{{ ev.id if ev else '' }}"
+      data-starts="{{ ev.starts_at.isoformat() if ev else '' }}" data-ends="{{ ev.ends_at.isoformat() if ev else '' }}">
+  <fieldset>
+    <legend>Event details</legend>
+    <div class="field">
+      <label for="title">Event title</label>
+      <input type="text" id="title" name="title" required minlength="5" maxlength="80" value="{{ ev.title if ev else '' }}" aria-describedby="title-hint title-error">
+      <p id="title-hint" class="hint">Between 5 and 80 characters.</p>
+      <p id="title-error" class="error" hidden></p>
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <label for="category">Category</label>
+        <select id="category" name="category" required aria-describedby="category-error">
+          <option value="">Choose a category</option>
+          {% for c in CATEGORIES %}<option value="{{ c }}" {% if ev and ev.category == c %}selected{% endif %}>{{ c|capitalize }}</option>{% endfor %}
+        </select>
+        <p id="category-error" class="error" hidden></p>
+      </div>
+      <div class="field">
+        <label for="group_id">Hosting group (optional)</label>
+        <select id="group_id" name="group_id">
+          <option value="">No group</option>
+          {% for g in groups %}<option value="{{ g.id }}" {% if ev and ev.group and ev.group.id == g.id %}selected{% endif %}>{{ g.name }}</option>{% endfor %}
+        </select>
+      </div>
+    </div>
+    <div class="field">
+      <label for="description">Description</label>
+      <textarea id="description" name="description" rows="5" required minlength="20" maxlength="500" aria-describedby="description-hint description-count description-error">{{ ev.description if ev else '' }}</textarea>
+      <p id="description-hint" class="hint">Tell students what the event is about. Between 20 and 500 characters.</p>
+      <p id="description-count" class="hint" aria-live="polite">0 of 500 characters used</p>
+      <p id="description-error" class="error" hidden></p>
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend>Venue and time</legend>
+    <div class="field">
+      <label for="venue_id">Venue</label>
+      <select id="venue_id" name="venue_id" required aria-describedby="venue_id-hint venue_id-error">
+        <option value="">Choose a venue</option>
+        {% for v in venues %}<option value="{{ v.id }}" data-capacity="{{ v.capacity }}" {% if ev and ev.venue.id == v.id %}selected{% endif %}>{{ v.name }} (capacity {{ v.capacity }})</option>{% endfor %}
+      </select>
+      <p id="venue_id-hint" class="hint">Check the <a href="/venues" target="_blank" rel="noopener">venue calendar</a> for clashes before choosing a time.</p>
+      <p id="venue_id-error" class="error" hidden></p>
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <label for="date">Date</label>
+        <input type="date" id="date" name="date" required aria-describedby="date-error">
+        <p id="date-error" class="error" hidden></p>
+      </div>
+      <div class="field">
+        <label for="start_time">Start time</label>
+        <input type="time" id="start_time" name="start_time" required aria-describedby="start_time-error">
+        <p id="start_time-error" class="error" hidden></p>
+      </div>
+      <div class="field">
+        <label for="end_time">End time</label>
+        <input type="time" id="end_time" name="end_time" required aria-describedby="end_time-error">
+        <p id="end_time-error" class="error" hidden></p>
+      </div>
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend>Tickets</legend>
+    <div class="field-row">
+      <div class="field">
+        <label for="capacity">Ticket capacity</label>
+        <input type="number" id="capacity" name="capacity" required min="1" max="800" inputmode="numeric" value="{{ ev.capacity if ev else '' }}" aria-describedby="capacity-hint capacity-error">
+        <p id="capacity-hint" class="hint">Cannot exceed the venue's capacity.</p>
+        <p id="capacity-error" class="error" hidden></p>
+      </div>
+      <div class="field">
+        <label for="price">Ticket price in Kwacha</label>
+        <input type="number" id="price" name="price" min="0" max="100000" step="0.50" inputmode="decimal" value="{{ '%.2f'|format(ev.price_ngwee / 100) if ev else '0' }}" aria-describedby="price-hint price-error">
+        <p id="price-hint" class="hint">0 for a free event. Paid tickets use the simulated checkout.</p>
+        <p id="price-error" class="error" hidden></p>
+      </div>
+    </div>
+  </fieldset>
+
+  <div class="actions">
+    <button type="submit" class="btn btn-primary">{{ 'Save changes' if ev else 'Save draft' }}</button>
+    <a class="btn btn-secondary" href="/organizer">Cancel</a>
+  </div>
+</form>
+{% endblock %}

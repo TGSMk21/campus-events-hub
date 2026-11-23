@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% from "_macros.html" import category %}
+{% block title %}Clubs & groups{% endblock %}
+{% block page %}groups{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>Clubs &amp; student groups</h1>
+    <p>Follow groups to see their events first in your recommendations.</p>
+  </div>
+  {% if user and user.role in ('organizer', 'admin') %}<a class="btn btn-secondary" href="/organizer#new-group">Register a group</a>{% endif %}
+</div>
+
+<form class="panel field-row align-end" method="get" action="/groups" role="search" aria-label="Filter groups">
+  <div class="field m0"><label for="gq">Search</label><input type="search" id="gq" name="q" value="{{ q }}" maxlength="80"></div>
+  <div class="field m0"><label for="gcat">Category</label>
+    <select id="gcat" name="category"><option value="">All</option>
+      {% for c in CATEGORIES %}<option value="{{ c }}" {% if category == c %}selected{% endif %}>{{ c|capitalize }}</option>{% endfor %}
+    </select></div>
+  <div class="actions m0"><button class="btn btn-primary" type="submit">Filter</button></div>
+</form>
+
+<h2 class="visually-hidden">Groups</h2>
+{% if groups %}
+<div class="grid mt1">
+  {% for g in groups %}
+  <article class="card" aria-labelledby="g-{{ g.id }}">
+    <h3 id="g-{{ g.id }}"><a href="/groups/{{ g.slug }}">{{ g.name }}</a></h3>
+    <p class="muted small m0">{{ g.description[:140] }}{% if g.description|length > 140 %}…{% endif %}</p>
+    <div class="foot">{{ category(g.category) }}
+      <span class="small muted">{{ g.followers }} follower{{ '' if g.followers == 1 else 's' }} · {{ g.upcoming_events }} upcoming</span>
+      {% if g.following %}<span class="badge st-approved">Following</span>{% endif %}
+    </div>
+  </article>
+  {% endfor %}
+</div>
+{% else %}
+<div class="empty mt1"><p>No groups match.</p></div>
+{% endif %}
+{% endblock %}

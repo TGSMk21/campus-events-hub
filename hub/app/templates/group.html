@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% from "_macros.html" import category, event_card %}
+{% block title %}{{ group.name }}{% endblock %}
+{% block description %}{{ group.description[:150] }}{% endblock %}
+{% block page %}group{% endblock %}
+
+{% block content %}
+<p class="small"><a href="/groups">← All groups</a></p>
+<div class="two-col">
+  <div>
+    {{ category(group.category) }}
+    <h1 class="mt0">{{ group.name }}</h1>
+    <p class="pre-line">{{ group.description }}</p>
+    <h2>Upcoming events</h2>
+    {% if events %}
+    <div class="grid">{% for ev in events %}{{ event_card(ev) }}{% endfor %}</div>
+    {% else %}<div class="empty"><p>No upcoming events from this group yet.</p></div>{% endif %}
+  </div>
+  <aside class="panel stack">
+    <dl class="facts">
+      <dt>Followers</dt><dd id="follower-count">{{ group.followers }}</dd>
+      {% if group.meeting_info %}<dt>Meets</dt><dd>{{ group.meeting_info }}</dd>{% endif %}
+      {% if group.contact_email %}<dt>Contact</dt><dd><a href="mailto:{{ group.contact_email }}">{{ group.contact_email }}</a></dd>{% endif %}
+    </dl>
+    {% if user %}
+    <button class="btn {{ 'btn-secondary' if group.following else 'btn-primary' }}" type="button" id="follow-btn"
+            data-slug="{{ group.slug }}" aria-pressed="{{ 'true' if group.following else 'false' }}">
+      {{ 'Following ✓' if group.following else 'Follow' }}
+    </button>
+    {% else %}
+    <a class="btn btn-primary" href="/login?next=/groups/{{ group.slug }}">Sign in to follow</a>
+    {% endif %}
+  </aside>
+</div>
+{% endblock %}

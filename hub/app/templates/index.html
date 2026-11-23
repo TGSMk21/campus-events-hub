@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% from "_macros.html" import event_card %}
+{% block page %}events{% endblock %}
+{% block scripts %}<script nonce="{{ nonce }}" src="{{ static('js/live.js') }}" defer></script>{% endblock %}
+
+{% block hero %}
+<section class="hero" aria-labelledby="hero-title">
+  <div class="inner">
+    <span class="live-pill" id="live-status" data-state="idle"><span class="live-dot" aria-hidden="true"></span><span class="live-text">Live seat updates</span></span>
+    <h1 id="hero-title">What's on at Mulungushi</h1>
+    <p>Find talks, matches, club nights and career fairs. Seat counts update live as people register.</p>
+
+    <form class="filters" method="get" action="/" role="search" aria-label="Filter events">
+      <div class="field grow m0">
+        <label for="q">Search events</label>
+        <input type="search" id="q" name="q" value="{{ filters.q }}" maxlength="80" placeholder="e.g. hackathon, football, careers">
+      </div>
+      <div class="field m0">
+        <label for="category">Category</label>
+        <select id="category" name="category">
+          <option value="">All categories</option>
+          {% for c in CATEGORIES %}<option value="{{ c }}" {% if filters.category == c %}selected{% endif %}>{{ c|capitalize }}</option>{% endfor %}
+        </select>
+      </div>
+      <div class="field m0">
+        <label for="from">From</label>
+        <input type="date" id="from" name="from" value="{{ filters['from'] }}">
+      </div>
+      <div class="field m0">
+        <label for="to">To</label>
+        <input type="date" id="to" name="to" value="{{ filters.to }}">
+      </div>
+      <div class="checks">
+        <div class="choice"><input type="checkbox" id="available" name="available" value="1" {% if filters.available %}checked{% endif %}><label for="available">Seats available</label></div>
+        <div class="choice"><input type="checkbox" id="free" name="free" value="1" {% if filters.free %}checked{% endif %}><label for="free">Free events only</label></div>
+      </div>
+      <div class="actions">
+        {% if filtering %}<a class="btn btn-secondary" href="/">Clear</a>{% endif %}
+        <button class="btn btn-primary" type="submit">Search</button>
+      </div>
+    </form>
+  </div>
+</section>
+{% endblock %}
+
+{% block content %}
+{% if recs %}
+<section aria-labelledby="recs-title">
+  <h2 id="recs-title" class="mt0">Recommended for you</h2>
+  <p class="muted small">Based on the groups you follow, your interests and events you've attended. <a href="/account#preferences">Change interests</a></p>
+  <div class="grid">{% for ev in recs %}{{ event_card(ev, rec=true) }}{% endfor %}</div>
+</section>
+{% elif user and not filtering and not user.interests %}
+<p class="panel small">Tip: <a href="/account#preferences">pick your interests</a> and follow a few <a href="/groups">clubs</a> to get personalised recommendations.</p>
+{% endif %}
+
+<section aria-labelledby="list-title">
+  <h2 id="list-title" {% if not recs %}class="mt0"{% endif %}>
+    {% if filtering %}{{ page.total }} matching event{{ '' if page.total == 1 else 's' }}{% else %}Upcoming events{% endif %}
+  </h2>
+  {% if page['items'] %}
+  <div class="grid">{% for ev in page['items'] %}{{ event_card(ev) }}{% endfor %}</div>
+  <nav class="pager" aria-label="Pagination">
+    {% if prev_url %}<a class="btn btn-secondary" href="{{ prev_url }}" rel="prev">← Previous</a>{% else %}<span></span>{% endif %}
+    {% if next_url %}<a class="btn btn-secondary" href="{{ next_url }}" rel="next">Next →</a>{% endif %}
+  </nav>
+  {% else %}
+  <div class="empty">
+    <p><strong>No events found.</strong></p>
+    <p>{% if filtering %}Try removing a filter.{% else %}Check back soon, or <a href="/organizer/events/new">propose an event</a>.{% endif %}</p>
+  </div>
+  {% endif %}
+</section>
+{% endblock %}

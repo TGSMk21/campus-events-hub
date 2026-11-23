@@ -1,0 +1,40 @@
+{% macro category(c) -%}
+<span class="badge cat-{{ c }}">{{ c|capitalize }}</span>
+{%- endmacro %}
+
+{% macro status(s) -%}
+<span class="badge st-{{ s }}">{{ s|capitalize }}</span>
+{%- endmacro %}
+
+{% macro seats(ev) -%}
+{% set left = ev.seats_left %}
+<span class="seats {% if left == 0 %}out{% elif left <= ev.capacity * 0.15 %}low{% endif %}" data-seats-for="{{ ev.id }}" data-capacity="{{ ev.capacity }}">
+  {% if left == 0 %}Sold out{% else %}{{ left }} of {{ ev.capacity }} seats left{% endif %}
+</span>
+{%- endmacro %}
+
+{% macro event_card(ev, rec=false) -%}
+<article class="card{% if rec %} rec{% endif %}" aria-labelledby="ev-{{ ev.id }}{% if rec %}-rec{% endif %}">
+  <div class="card-top">
+    <span class="date-block" aria-hidden="true"><small>{{ ev.starts_at|when('%b') }}</small>{{ ev.starts_at|when('%d') }}</span>
+    <div>
+      <h3 id="ev-{{ ev.id }}{% if rec %}-rec{% endif %}"><a href="/events/{{ ev.id }}">{{ ev.title }}</a></h3>
+      <div class="meta">
+        <span><span class="visually-hidden">When: </span>{{ ev.starts_at|when }} – {{ ev.ends_at|when('%H:%M') }}</span>
+        <span><span class="visually-hidden">Where: </span>{{ ev.venue.name }}</span>
+        {% if ev.group %}<span>by {{ ev.group.name }}</span>{% endif %}
+      </div>
+    </div>
+  </div>
+  {% if rec and ev.reasons %}<p class="reasons">{{ ev.reasons|join(' · ') }}</p>{% endif %}
+  <div class="foot">
+    {{ category(ev.category) }}
+    <span class="price">{{ ev.price_ngwee|money }}</span>
+    {{ seats(ev) }}
+  </div>
+</article>
+{%- endmacro %}
+
+{% macro field_error(id) -%}
+<p id="{{ id }}-error" class="error" hidden></p>
+{%- endmacro %}

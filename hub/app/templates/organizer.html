@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+{% from "_macros.html" import status, category %}
+{% block title %}Organizer dashboard{% endblock %}
+{% block page %}organizer{% endblock %}
+{% block scripts %}
+<script nonce="{{ nonce }}" src="{{ static('js/forms.js') }}" defer></script>
+<script nonce="{{ nonce }}" src="{{ static('js/organizer.js') }}" defer></script>
+{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div><h1>Organizer dashboard</h1><p>Create events, request venues, attach approval letters and track sales.</p></div>
+  <a class="btn btn-primary" href="/organizer/events/new">+ New event</a>
+</div>
+
+<div id="status" class="summary" role="status" aria-live="polite" tabindex="-1"></div>
+
+<h2>My events</h2>
+{% if events %}
+<div class="table-wrap">
+  <table>
+    <thead><tr><th scope="col">Event</th><th scope="col">When &amp; where</th><th scope="col">Status</th><th scope="col">Tickets</th><th scope="col">Actions</th></tr></thead>
+    <tbody>
+    {% for ev in events %}
+      <tr id="event-{{ ev.id }}">
+        <td><a href="/events/{{ ev.id }}">{{ ev.title }}</a><br>{{ category(ev.category) }} <span class="small muted">{{ ev.price_ngwee|money }}</span></td>
+        <td>{{ ev.starts_at|when }}<br><span class="small muted">{{ ev.venue.name }}</span></td>
+        <td>{{ status(ev.status) }}</td>
+        <td><span data-seats-for="{{ ev.id }}" data-capacity="{{ ev.capacity }}" data-format="sold">{{ ev.tickets_sold }} / {{ ev.capacity }}</span>
+          {% if ev.tickets_sold %}<br><button class="linklike small link-style" type="button" data-attendees="{{ ev.id }}">Attendee list</button>{% endif %}</td>
+        <td>
+          <div class="actions m0">
+          {% if ev.status in ('draft', 'rejected') %}
+            <a class="btn btn-secondary btn-sm" href="/organizer/events/{{ ev.id }}/edit">Edit</a>
+            <details class="inline">
+              <summary>Request venue</summary>
+              <form data-submit-event="{{ ev.id }}" novalidate>
+                <div class="field">
+                  <label for="att-{{ ev.id }}">Expected attendance</label>
+                  <input type="number" id="att-{{ ev.id }}" name="expected_attendance" min="1" max="800" required value="{{ ev.capacity }}">
+                </div>
+                <fieldset class="group"><legend>Venue requirements</legend>
+                  {% for r in REQUIREMENTS %}<div class="choice"><input type="checkbox" id="req-{{ ev.id }}-{{ r }}" name="requirements" value="{{ r }}"><label for="req-{{ ev.id }}-{{ r }}">{{ {'projector': 'Projector and screen', 'sound': 'Sound system', 'seating': 'Extra seating'}[r] }}</label></div>{% endfor %}
+                </fieldset>
+                <button class="btn btn-primary btn-sm" type="submit">Submit for approval</button>
+              </form>
+            </details>
+          {% endif %}
+          {% if ev.status in ('draft', 'pending', 'published', 'rejected') %}
+            <button class="btn btn-danger btn-sm" type="button" data-cancel-event="{{ ev.id }}" data-title="{{ ev.title }}">Cancel</button>
+          {% endif %}
+          </div>
+        </td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<div class="empty"><p>No events yet. <a href="/organizer/events/new">Create your first event</a>.</p></div>
+{% endif %}
+
+<section aria-labelledby="attendees-title" id="attendees-panel" hidden>
+  <h2 id="attendees-title" tabindex="-1">Attendees</h2>
+  <div class="table-wrap"><table><thead><tr><th scope="col">Ticket</th><th scope="col">Name</th><th scope="col">Email</th><th scope="col">Paid</th></tr></thead><tbody id="attendees-body"></tbody></table></div>
+</section>
+
+<h2>Venue requests</h2>
+{% if bookings %}
+<div class="stack">
+{% for b in bookings %}
+  <article class="panel" aria-labelledby="b-{{ b.id }}">
+    <div class="page-head m0">
+      <div><h3 id="b-{{ b.id }}">{{ b.event_title }}</h3>
+        <p class="small">{{ b.venue.name }} · {{ b.starts_at|when }}–{{ b.ends_at|when('%H:%M') }} · {{ b.expected_attendance }} people{% if b.requirements %} · needs {{ b.requirements|join(', ') }}{% endif %}</p></div>
+      {{ status(b.status) }}
+    </div>
+    {% if b.admin_note %}<p class="small"><strong>Admin note:</strong> {{ b.admin_note }}</p>{% endif %}
+    {% for c in b.conflicts %}
+      <p class="conflict {{ 'soft' if c.status == 'pending' else '' }}">⚠ Overlaps with {{ c.status }} booking “{{ c.event_title }}” ({{ c.starts_at|when }}–{{ c.ends_at|when('%H:%M') }})</p>
+    {% endfor %}
+    <details class="inline" data-docs-for="{{ b.id }}">
+      <summary>Approval documents ({{ b.documents }})</summary>
+      <ul class="doc-list small" data-doc-list="{{ b.id }}"></ul>
+      {% if b.status == 'pending' %}
+      <form data-upload="{{ b.id }}" novalidate>
+        <label for="file-{{ b.id }}">Upload a signed approval letter</label>
+        <input type="file" id="file-{{ b.id }}" name="file" accept=".pdf,.doc,.docx,application/pdf" required aria-describedby="file-hint-{{ b.id }}">
+        <p class="hint" id="file-hint-{{ b.id }}">PDF or Word, up to 5 MB.</p>
+        <button class="btn btn-secondary btn-sm" type="submit">Upload</button>
+      </form>
+      {% endif %}
+    </details>
+  </article>
+{% endfor %}
+</div>
+{% else %}
+<p class="muted">No venue requests yet. Create an event, then choose “Request venue”.</p>
+{% endif %}
+
+<h2 id="new-group">Register a club or group</h2>
+<form id="group-form" class="panel" novalidate>
+  <div class="field-row">
+    <div class="field"><label for="g-name">Group name</label><input type="text" id="g-name" name="name" required minlength="3" maxlength="80" aria-describedby="g-name-error"><p id="g-name-error" class="error" hidden></p></div>
+    <div class="field"><label for="g-slug">Short link name</label><input type="text" id="g-slug" name="slug" required pattern="[a-z0-9-]{2,60}" aria-describedby="g-slug-hint g-slug-error"><p id="g-slug-hint" class="hint">Lowercase letters, numbers and dashes, e.g. chess-club.</p><p id="g-slug-error" class="error" hidden></p></div>
+    <div class="field"><label for="g-category">Category</label><select id="g-category" name="category" required>{% for c in CATEGORIES %}<option value="{{ c }}">{{ c|capitalize }}</option>{% endfor %}</select></div>
+  </div>
+  <div class="field"><label for="g-description">Description</label><textarea id="g-description" name="description" rows="3" maxlength="1000"></textarea></div>
+  <div class="field-row">
+    <div class="field"><label for="g-meeting">When and where you meet</label><input type="text" id="g-meeting" name="meeting_info" maxlength="160"></div>
+    <div class="field"><label for="g-email">Contact email</label><input type="email" id="g-email" name="contact_email" maxlength="254" aria-describedby="g-email-error"><p id="g-email-error" class="error" hidden></p></div>
+  </div>
+  <button class="btn btn-primary" type="submit">Register group</button>
+</form>
+{% endblock %}

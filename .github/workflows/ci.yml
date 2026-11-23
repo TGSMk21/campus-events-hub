@@ -1,0 +1,63 @@
+name: CI
+
+on:
+  push:
+    branches: [main, final-product]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: hub
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: hub
+          POSTGRES_PASSWORD: hub
+          POSTGRES_DB: campus_hub_test
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U hub" --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      DATABASE_URL: postgresql://hub:hub@localhost:5432/campus_hub_test
+      SESSION_SECRET: ci-only-session-secret-0123456789abcdef0123
+      PAYMENT_WEBHOOK_SECRET: ci-only-webhook-secret-0123456789abcdef012
+      ENV: test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: hub/requirements*.txt
+      - run: pip install -r requirements-dev.txt
+      - name: Lint
+        run: ruff check app scripts tests
+      - name: Migrations apply, roll back and re-apply cleanly
+        run: |
+          alembic upgrade head
+          alembic downgrade base
+          alembic upgrade head
+      - name: Contract file is up to date
+        run: |
+          python -m scripts.export_openapi
+          git diff --exit-code openapi.json
+      - name: Tests
+        run: pytest -q
+
+  secrets-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: TruffleHog (verified secrets only)
+        uses: trufflesecurity/trufflehog@v3.88.0
+        with:
+          extra_args: --only-verified

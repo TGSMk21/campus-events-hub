@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="{% block description %}Discover campus events, clubs and student groups at Mulungushi University, and request venues for your own events.{% endblock %}">
+  <title>{% block title %}Campus Event & Activities Hub{% endblock %} | Mulungushi University</title>
+  <link rel="stylesheet" href="{{ static('css/styles.css') }}">
+  <script nonce="{{ nonce }}" src="{{ static('js/core.js') }}" defer></script>
+  {% block scripts %}{% endblock %}
+</head>
+<body data-page="{% block page %}{% endblock %}" data-role="{{ user.role if user else 'guest' }}">
+  <a class="skip-link" href="#main">Skip to main content</a>
+
+  <header class="site-header">
+    <div class="inner">
+      <a class="brand" href="/"><span class="brand-mark" aria-hidden="true">C</span>Campus Events Hub</a>
+      <nav aria-label="Primary">
+        <ul>
+          <li><a href="/" {% if path == '/' %}aria-current="page"{% endif %}>Events</a></li>
+          <li><a href="/groups" {% if path.startswith('/groups') %}aria-current="page"{% endif %}>Clubs &amp; groups</a></li>
+          <li><a href="/venues" {% if path.startswith('/venues') %}aria-current="page"{% endif %}>Venues</a></li>
+          {% if user and user.role in ('organizer', 'admin') %}
+          <li><a href="/organizer" {% if path.startswith('/organizer') %}aria-current="page"{% endif %}>Organizer</a></li>
+          {% endif %}
+          {% if user and user.role == 'admin' %}
+          <li><a href="/admin" {% if path.startswith('/admin') %}aria-current="page"{% endif %}>Admin</a></li>
+          {% endif %}
+          {% if user %}
+          <li><a href="/account" {% if path == '/account' %}aria-current="page"{% endif %}>My account</a></li>
+          <li><span class="role-chip"><span class="visually-hidden">Signed in as </span>{{ user.role }}</span></li>
+          <li><button type="button" class="linklike" data-action="logout">Sign out</button></li>
+          {% else %}
+          <li><a href="/login" {% if path == '/login' %}aria-current="page"{% endif %}>Sign in</a></li>
+          <li><a href="/register" {% if path == '/register' %}aria-current="page"{% endif %}>Create account</a></li>
+          {% endif %}
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  {% block hero %}{% endblock %}
+
+  <main id="main" class="{% block main_class %}{% endblock %}" tabindex="-1">
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="site-footer">
+    <p>&copy; 2026 Mulungushi University · ICT461 Group 2 · Coursework prototype. Payments are simulated; no real money moves.
+      · <a href="/help">Help</a> · <a href="/api-docs">API docs</a></p>
+  </footer>
+  <div class="toast-region" role="status" aria-live="polite" id="toasts"></div>
+</body>
+</html>

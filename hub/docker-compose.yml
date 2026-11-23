@@ -1,0 +1,31 @@
+# Local stack: PostgreSQL 16 + the hub. Secrets come from .env (see .env.example).
+#   docker compose up --build
+#   docker compose exec app python -m scripts.seed
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: hub
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-hub}
+      POSTGRES_DB: campus_hub
+    volumes: [pgdata:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U hub -d campus_hub"]
+      interval: 5s
+      retries: 10
+
+  app:
+    build: .
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql://hub:${POSTGRES_PASSWORD:-hub}@db:5432/campus_hub
+      COOKIE_SECURE: "false"           # plain HTTP inside compose; put TLS in front for anything shared
+      PUBLIC_ORIGIN: http://localhost:8000
+    ports: ["8000:8000"]
+    volumes: [uploads:/app/uploads]
+    depends_on:
+      db: {condition: service_healthy}
+
+volumes:
+  pgdata:
+  uploads:

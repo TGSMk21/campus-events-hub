@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% from "_macros.html" import status %}
+{% block title %}Admin console{% endblock %}
+{% block page %}admin{% endblock %}
+{% block scripts %}
+<script nonce="{{ nonce }}" src="{{ static('js/forms.js') }}" defer></script>
+<script nonce="{{ nonce }}" src="{{ static('js/admin.js') }}" defer></script>
+{% endblock %}
+
+{% block content %}
+<div class="page-head"><div><h1>Admin console</h1><p>Review venue requests, manage venues and roles, and monitor notifications.</p></div></div>
+<div id="status" class="summary" role="status" aria-live="polite" tabindex="-1"></div>
+
+<h2>Pending venue requests ({{ pending|length }})</h2>
+{% if pending %}
+<div class="stack">
+{% for b in pending %}
+  <article class="panel" id="booking-{{ b.id }}" aria-labelledby="pb-{{ b.id }}">
+    <div class="page-head m0">
+      <div>
+        <h3 id="pb-{{ b.id }}"><a href="/events/{{ b.event_id }}">{{ b.event_title }}</a></h3>
+        <p class="small">{{ b.venue.name }} · {{ b.starts_at|when('%a %d %b %Y, %H:%M') }}–{{ b.ends_at|when('%H:%M') }} · {{ b.expected_attendance }} people
+          {% if b.requirements %}· needs {{ b.requirements|join(', ') }}{% endif %}<br>Requested by {{ b.requested_by_name }} on {{ b.created_at|when('%d %b') }}</p>
+      </div>
+      {{ status(b.status) }}
+    </div>
+    {% for c in b.conflicts %}
+      <p class="conflict {{ 'soft' if c.status == 'pending' else '' }}">⚠ Overlaps with {{ c.status }} booking “{{ c.event_title }}” ({{ c.starts_at|when }}–{{ c.ends_at|when('%H:%M') }}){% if c.status == 'approved' %}: approving will fail.{% endif %}</p>
+    {% else %}
+      <p class="small muted">No clashes with other pending or approved bookings.</p>
+    {% endfor %}
+    <details class="inline" data-docs-for="{{ b.id }}"><summary>Approval documents ({{ b.documents }})</summary><ul class="small" data-doc-list="{{ b.id }}"></ul></details>
+    <form class="mt1" data-review="{{ b.id }}" novalidate>
+      <div class="field">
+        <label for="note-{{ b.id }}">Note to organizer (required when rejecting)</label>
+        <input type="text" id="note-{{ b.id }}" name="note" maxlength="300">
+      </div>
+      <div class="actions m0">
+        <button class="btn btn-ok btn-sm" type="submit" value="approve">Approve &amp; publish</button>
+        <button class="btn btn-danger btn-sm" type="submit" value="reject">Reject</button>
+      </div>
+    </form>
+  </article>
+{% endfor %}
+</div>
+{% else %}
+<div class="empty"><p>No requests waiting for review.</p></div>
+{% endif %}
+
+<h2>Recently reviewed</h2>
+{% if recent %}
+<div class="table-wrap"><table>
+  <thead><tr><th scope="col">Event</th><th scope="col">Venue &amp; time</th><th scope="col">Status</th><th scope="col">Note</th></tr></thead>
+  <tbody>{% for b in recent %}<tr><td><a href="/events/{{ b.event_id }}">{{ b.event_title }}</a></td><td>{{ b.venue.name }}<br><span class="small muted">{{ b.starts_at|when }}</span></td><td>{{ status(b.status) }}</td><td class="small">{{ b.admin_note or '' }}</td></tr>{% endfor %}</tbody>
+</table></div>
+{% else %}<p class="muted">Nothing reviewed yet.</p>{% endif %}
+
+<div class="two-col mt2">
+  <section aria-labelledby="users-title">
+    <h2 id="users-title" class="mt0">Users and roles</h2>
+    <form id="user-search" class="field-row align-end" role="search">
+      <div class="field m0"><label for="uq">Search by name or email</label><input type="search" id="uq" name="q" maxlength="80"></div>
+      <div class="actions m0"><button class="btn btn-secondary" type="submit">Search</button></div>
+    </form>
+    <div class="table-wrap mt1"><table><thead><tr><th scope="col">Name</th><th scope="col">Email</th><th scope="col">Role</th></tr></thead><tbody id="users-body"></tbody></table></div>
+  </section>
+
+  <section aria-labelledby="venue-title" class="panel">
+    <h2 id="venue-title" class="mt0">Add a venue</h2>
+    <form id="venue-form" novalidate>
+      <div class="field"><label for="v-name">Name</label><input type="text" id="v-name" name="name" required minlength="3" maxlength="80"></div>
+      <div class="field"><label for="v-slug">Short name</label><input type="text" id="v-slug" name="slug" required pattern="[a-z0-9-]{2,40}" aria-describedby="v-slug-hint"><p id="v-slug-hint" class="hint">e.g. lecture-hall-b</p></div>
+      <div class="field"><label for="v-capacity">Capacity</label><input type="number" id="v-capacity" name="capacity" required min="1" max="5000"></div>
+      <div class="field"><label for="v-location">Location</label><input type="text" id="v-location" name="location" maxlength="120"></div>
+      <button class="btn btn-primary" type="submit">Add venue</button>
+    </form>
+    <h3 class="mt1">Current venues</h3>
+    <ul class="small">{% for v in venues %}<li>{{ v.name }} ({{ v.capacity }})</li>{% endfor %}</ul>
+  </section>
+</div>
+
+<h2>Notification outbox</h2>
+<p class="small muted">Email tickets and WhatsApp messages. “Simulated” means no SMTP/WhatsApp credentials are configured, so the message was logged instead of sent.</p>
+<div class="table-wrap"><table>
+  <thead><tr><th scope="col">#</th><th scope="col">To</th><th scope="col">Channel</th><th scope="col">Template</th><th scope="col">Status</th><th scope="col">Queued</th></tr></thead>
+  <tbody id="outbox-body"><tr><td colspan="6" class="muted">Loading…</td></tr></tbody>
+</table></div>
+{% endblock %}

@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Sandbox payment{% endblock %}
+{% block page %}sandbox{% endblock %}
+{% block main_class %}narrow{% endblock %}
+{% block scripts %}<script nonce="{{ nonce }}" src="{{ static('js/sandbox.js') }}" defer></script>{% endblock %}
+
+{% block content %}
+<h1>Confirm payment</h1>
+<div class="summary is-info"><h2>Sandbox mode</h2><p>This simulates a mobile-money prompt. No real money moves and no card or wallet details are collected.</p></div>
+
+<div class="panel stack" id="pay" data-payment="{{ pay.public_id }}" data-event-id="{{ pay.event_id }}">
+  <dl class="facts">
+    <dt>Event</dt><dd>{{ pay.event_title }}</dd>
+    <dt>Amount</dt><dd class="price">{{ pay.amount_ngwee|money }}</dd>
+    <dt>Reference</dt><dd class="mono small">{{ pay.public_id }}</dd>
+    <dt>Status</dt><dd id="pay-status">{{ pay.status|capitalize }}</dd>
+  </dl>
+  <div id="status" class="summary" role="status" aria-live="polite" tabindex="-1"></div>
+  {% if pay.status == 'pending' %}
+  <div class="actions" id="pay-actions">
+    <button class="btn btn-ok" type="button" data-outcome="success">Approve payment</button>
+    <button class="btn btn-danger" type="button" data-outcome="decline">Decline</button>
+  </div>
+  {% elif pay.ticket_code %}
+  <p>Ticket code: <span class="mono ticket-code">{{ pay.ticket_code }}</span></p>
+  {% endif %}
+  <p><a href="/events/{{ pay.event_id }}">Back to the event</a></p>
+</div>
+{% endblock %}

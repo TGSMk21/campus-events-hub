@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}Venue availability{% endblock %}
+{% block page %}venues{% endblock %}
+{% block scripts %}<script nonce="{{ nonce }}" src="{{ static('js/live.js') }}" defer></script>{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>Venue availability</h1>
+    <p>Approved bookings are confirmed; pending requests are awaiting an administrator. Check here before you request a slot.</p>
+  </div>
+  <span class="live-pill on-light" id="live-status" data-state="idle"><span class="live-dot" aria-hidden="true"></span><span class="live-text">Live</span></span>
+</div>
+
+{% if venue %}
+<form class="panel field-row align-end" method="get" action="/venues">
+  <div class="field m0"><label for="venue">Venue</label>
+    <select id="venue" name="venue">
+      {% for v in venues %}<option value="{{ v.id }}" {% if v.id == venue.id %}selected{% endif %}>{{ v.name }} (capacity {{ v.capacity }})</option>{% endfor %}
+    </select></div>
+  <div class="field m0"><label for="vfrom">Starting</label><input type="date" id="vfrom" name="from" value="{{ start.isoformat() }}"></div>
+  <div class="actions m0"><button class="btn btn-primary" type="submit">Show</button></div>
+</form>
+
+<div class="page-head mt1">
+  <div>
+    <h2 class="m0">{{ venue.name }}</h2>
+    <p>{{ venue.location }}{% if venue.facilities %} · {{ venue.facilities|join(', ') }}{% endif %}</p>
+  </div>
+  <div class="actions m0">
+    <a class="btn btn-secondary btn-sm" href="/venues?venue={{ venue.id }}&from={{ prev_from }}">← Earlier</a>
+    <a class="btn btn-secondary btn-sm" href="/venues?venue={{ venue.id }}&from={{ next_from }}">Later →</a>
+  </div>
+</div>
+
+<div class="cal" id="venue-cal" data-venue-id="{{ venue.id }}">
+  {% for d in days %}
+  <section class="day{% if loop.first and d == start %} today{% endif %}" aria-label="{{ d.strftime('%A %d %B') }}">
+    <h3>{{ d.strftime('%a %d %b') }}</h3>
+    {% for s in by_day.get(d, []) %}
+      <div class="slot {{ s.status }}">{{ s.starts_at|when('%H:%M') }}–{{ s.ends_at|when('%H:%M') }} · {{ s.event_title }}<span class="visually-hidden"> ({{ s.status }})</span></div>
+    {% else %}
+      <p class="small muted m0">Free all day</p>
+    {% endfor %}
+  </section>
+  {% endfor %}
+</div>
+<p class="small muted mt1"><span class="slot inline-block">Approved</span> <span class="slot pending inline-block">Pending review</span></p>
+{% else %}
+<div class="empty"><p>No venues have been added yet.</p></div>
+{% endif %}
+{% endblock %}

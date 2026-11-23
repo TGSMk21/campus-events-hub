@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Create an account{% endblock %}
+{% block page %}register{% endblock %}
+{% block main_class %}narrow{% endblock %}
+{% block scripts %}<script nonce="{{ nonce }}" src="{{ static('js/forms.js') }}" defer></script>{% endblock %}
+
+{% block content %}
+<h1>Create an account</h1>
+<p class="muted">Already registered? <a href="/login?next={{ next|urlencode }}">Sign in</a>.</p>
+
+<div id="status" class="summary" role="status" aria-live="polite" tabindex="-1"></div>
+
+<form id="register-form" class="panel" novalidate data-next="{{ next }}">
+  <div class="field">
+    <label for="full_name">Full name</label>
+    <input type="text" id="full_name" name="full_name" autocomplete="name" required minlength="3" maxlength="60" aria-describedby="full_name-hint full_name-error">
+    <p id="full_name-hint" class="hint">As it appears on your student or staff ID.</p>
+    <p id="full_name-error" class="error" hidden></p>
+  </div>
+  <div class="field">
+    <label for="email">Email address</label>
+    <input type="email" id="email" name="email" autocomplete="email" required maxlength="254" aria-describedby="email-error">
+    <p id="email-error" class="error" hidden></p>
+  </div>
+  <div class="field">
+    <label for="password">Password</label>
+    <input type="password" id="password" name="password" autocomplete="new-password" required minlength="10" maxlength="128" aria-describedby="password-hint password-error">
+    <p id="password-hint" class="hint">At least 10 characters, with at least one letter and one number.</p>
+    <p id="password-error" class="error" hidden></p>
+  </div>
+  <fieldset class="group">
+    <legend>I want to</legend>
+    <div class="choice"><input type="radio" id="role-student" name="role" value="student" checked><label for="role-student">Discover and attend events (student)</label></div>
+    <div class="choice"><input type="radio" id="role-organizer" name="role" value="organizer"><label for="role-organizer">Organise events and book venues (club or society organizer)</label></div>
+  </fieldset>
+  <div class="actions"><button class="btn btn-primary" type="submit">Create account</button></div>
+</form>
+{% endblock %}

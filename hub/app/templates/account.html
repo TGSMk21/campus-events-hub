@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% from "_macros.html" import status %}
+{% block title %}My account{% endblock %}
+{% block page %}account{% endblock %}
+{% block scripts %}<script nonce="{{ nonce }}" src="{{ static('js/forms.js') }}" defer></script>{% endblock %}
+
+{% block content %}
+<div class="page-head"><div><h1>My account</h1><p>{{ user.full_name }} · {{ user.email }}</p></div></div>
+
+<div class="two-col">
+  <section aria-labelledby="tickets" class="stack">
+    <h2 id="tickets" class="mt0">My tickets</h2>
+    {% if tickets %}
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th scope="col">Event</th><th scope="col">When</th><th scope="col">Ticket</th><th scope="col"><span class="visually-hidden">Actions</span></th></tr></thead>
+        <tbody>
+        {% for t in tickets %}
+          <tr>
+            <td><a href="/events/{{ t.event.id }}">{{ t.event.title }}</a><br><span class="small muted">{{ t.event.venue_name }}</span></td>
+            <td>{{ t.event.starts_at|when }}</td>
+            <td><span class="mono">{{ t.code }}</span><br>{{ status(t.status) }}{% if t.paid %} <span class="badge">Paid</span>{% endif %}</td>
+            <td>{% if t.status == 'confirmed' %}<button class="btn btn-danger btn-sm" type="button" data-cancel-ticket="{{ t.id }}" data-title="{{ t.event.title }}">Cancel</button>{% endif %}</td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="empty"><p>No tickets yet. <a href="/">Find an event</a>.</p></div>
+    {% endif %}
+
+    <h2>Groups I follow</h2>
+    {% if following %}
+    <ul>{% for g in following %}<li><a href="/groups/{{ g.slug }}">{{ g.name }}</a></li>{% endfor %}</ul>
+    {% else %}<p class="muted">You're not following any groups yet. <a href="/groups">Browse clubs</a>.</p>{% endif %}
+  </section>
+
+  <section aria-labelledby="preferences" class="panel">
+    <h2 id="preferences" class="mt0">Preferences</h2>
+    <div id="status" class="summary" role="status" aria-live="polite" tabindex="-1"></div>
+    <form id="prefs-form" novalidate>
+      <div class="field">
+        <label for="full_name">Full name</label>
+        <input type="text" id="full_name" name="full_name" value="{{ user.full_name }}" required minlength="3" maxlength="60" aria-describedby="full_name-error">
+        <p id="full_name-error" class="error" hidden></p>
+      </div>
+      <fieldset class="group">
+        <legend>Interests</legend>
+        <p class="hint mt0">Pick up to 5. We use these to recommend events.</p>
+        {% for c in CATEGORIES %}
+        <div class="choice"><input type="checkbox" id="int-{{ c }}" name="interests" value="{{ c }}" {% if c in user.interests %}checked{% endif %}><label for="int-{{ c }}">{{ c|capitalize }}</label></div>
+        {% endfor %}
+      </fieldset>
+      <fieldset class="group">
+        <legend>WhatsApp notifications</legend>
+        <div class="field">
+          <label for="phone">WhatsApp number</label>
+          <input type="tel" id="phone" name="phone" value="{{ user.phone or '' }}" inputmode="tel" autocomplete="tel" aria-describedby="phone-hint phone-error">
+          <p id="phone-hint" class="hint">Zambian format, for example +260971234567 or 0971234567.</p>
+          <p id="phone-error" class="error" hidden></p>
+        </div>
+        <div class="choice"><input type="checkbox" id="whatsapp_opt_in" name="whatsapp_opt_in" {% if user.whatsapp_opt_in %}checked{% endif %}>
+          <label for="whatsapp_opt_in">Send my tickets and event updates on WhatsApp. I can turn this off at any time.</label></div>
+      </fieldset>
+      <div class="actions"><button class="btn btn-primary" type="submit">Save preferences</button></div>
+    </form>
+  </section>
+</div>
+{% endblock %}

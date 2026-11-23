@@ -1,0 +1,4 @@
+-r requirements.txt
+pytest==9.2.0
+websockets>=15
+ruff>=0.8
