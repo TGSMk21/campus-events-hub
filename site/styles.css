@@ -254,3 +254,8 @@ details.inline summary { cursor: pointer; font-weight: 700; min-height: 2rem; di
 .stat-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr)); gap: .75rem; margin-bottom: 1rem; }
 .stat { background: var(--surface); border: 1px solid var(--hairline); border-radius: var(--radius); padding: .75rem 1rem; }
 .stat b { display: block; font-size: 1.5rem; }
+main { max-width: none; padding: 0; }
+.page { max-width: 72rem; margin: 0 auto; padding: 1.75rem 1.25rem 3rem; }
+.page.narrow { max-width: 46rem; }
+.lead { font-size: 1.1rem; }
+@media (max-width: 480px) { .page { padding: 1.25rem 1rem 2rem; } }
